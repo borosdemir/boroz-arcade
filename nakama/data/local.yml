@@ -1,0 +1,17 @@
+name: nakama-node-1
+database:
+  address:
+    - postgres:localdb@postgres:5432/nakama
+logger:
+  level: "DEBUG"
+  stdout: true
+session:
+  token_expiry_sec: 7200
+  encryption_key: "default-encryption-key"
+socket:
+  server_key: "default-server-key"
+  port: 7350
+console:
+  port: 7351
+  username: "admin"
+  password: "password"
