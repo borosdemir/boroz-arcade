@@ -16,6 +16,10 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!supabase) {
+      setError("Configuración de Supabase faltante.");
+      return;
+    }
     setLoading(true);
     setError(null);
     
@@ -34,6 +38,10 @@ export default function LoginPage() {
   };
 
   const handleSignUp = async () => {
+    if (!supabase) {
+      setError("Configuración de Supabase faltante.");
+      return;
+    }
     setLoading(true);
     setError(null);
     setMessage(null);
