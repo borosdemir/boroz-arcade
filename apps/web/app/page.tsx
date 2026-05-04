@@ -3,6 +3,7 @@
 import React, { Suspense, useEffect, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Stars, Float } from "@react-three/drei";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 
 function RotatingCube() {
@@ -19,6 +20,7 @@ function RotatingCube() {
 export default function Home() {
   const [user, setUser] = useState<any>(null);
   const supabase = createClient();
+  const router = useRouter();
 
   useEffect(() => {
     const getUser = async () => {
@@ -29,8 +31,7 @@ export default function Home() {
   }, [supabase]);
 
   const handleLogin = async () => {
-    // Aquí redirigirías a login o abrirías un modal
-    alert("Configura tus credenciales de Supabase en .env.local para comenzar!");
+    router.push("/login");
   };
 
   return (
@@ -62,7 +63,13 @@ export default function Home() {
             <div className="bg-white/5 backdrop-blur-md p-6 rounded-2xl border border-white/10">
               <p className="text-gray-400 mb-2">Bienvenido, Guerrero</p>
               <p className="text-white font-bold">{user.email}</p>
-              <button className="mt-4 px-6 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500 hover:text-white transition-all">
+              <button 
+                onClick={async () => {
+                  await supabase.auth.signOut();
+                  router.refresh();
+                }}
+                className="mt-4 px-6 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500 hover:text-white transition-all"
+              >
                 Cerrar Sesión
               </button>
             </div>
