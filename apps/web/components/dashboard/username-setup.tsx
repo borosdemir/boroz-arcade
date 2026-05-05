@@ -30,31 +30,40 @@ export default function UsernameSetup({ userId }: { userId: string }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
-      <div className="w-full max-w-md bg-white/5 border border-white/10 p-8 rounded-3xl shadow-2xl">
-        <h2 className="text-3xl font-black text-white tracking-tighter mb-4 uppercase">
-          Elige tu <span className="text-blue-500">Codename</span>
-        </h2>
-        <p className="text-gray-400 text-sm mb-8 uppercase tracking-widest leading-relaxed">
-          Para entrar en combate, necesitamos identificarte en los registros de Boroz.
-        </p>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-background/95 backdrop-blur-sm">
+      <div className="w-full max-w-sm bg-surface border border-border p-6 rounded-2xl">
+        <div className="text-center mb-6">
+          <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center mx-auto mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary-foreground">
+              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-bold text-foreground">Elige tu nombre</h2>
+          <p className="text-sm text-foreground-muted mt-1">
+            Este nombre se mostrara a otros jugadores
+          </p>
+        </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
-            <label className="text-xs font-bold text-gray-500 uppercase ml-1">Nickname Arcade</label>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
             <input
               type="text"
-              placeholder="Ej: STAR_PILOT"
+              placeholder="Tu nombre de jugador"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
               minLength={3}
-              className="w-full bg-white/5 border border-white/10 p-4 rounded-xl text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
+              maxLength={20}
+              className="w-full px-4 py-3 bg-background border border-border rounded-xl text-foreground placeholder:text-foreground-subtle focus:outline-none focus:border-primary transition-colors"
             />
+            <p className="text-xs text-foreground-muted mt-2">
+              Entre 3 y 20 caracteres
+            </p>
           </div>
 
           {error && (
-            <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-lg text-sm text-center">
+            <div className="px-4 py-3 bg-destructive-muted border border-destructive/20 text-destructive text-sm rounded-xl">
               {error}
             </div>
           )}
@@ -62,9 +71,9 @@ export default function UsernameSetup({ userId }: { userId: string }) {
           <button
             type="submit"
             disabled={loading || username.length < 3}
-            className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-xl transition-all shadow-lg shadow-blue-600/20 active:scale-95 disabled:opacity-50"
+            className="w-full py-3 bg-primary text-primary-foreground font-semibold rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50"
           >
-            {loading ? "PROCESANDO..." : "CONFIRMAR IDENTIDAD"}
+            {loading ? "Guardando..." : "Continuar"}
           </button>
         </form>
       </div>

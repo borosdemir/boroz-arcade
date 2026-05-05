@@ -2,6 +2,7 @@ import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import React from "react";
 import UsernameSetup from "@/components/dashboard/username-setup";
+import Link from "next/link";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -22,75 +23,102 @@ export default async function DashboardPage() {
 
   const showUsernameSetup = !profile?.username;
 
-  return (
-    <div className="min-h-screen bg-[#050505] text-white p-8 font-sans">
-      {showUsernameSetup && <UsernameSetup userId={user.id} />}
-      <div className="max-w-4xl mx-auto">
-        <header className="flex justify-between items-center mb-12 border-b border-white/10 pb-6">
-          <div>
-            <h1 className="text-3xl font-black tracking-tighter uppercase italic">
-              Player <span className="text-blue-500 underline">Dashboard</span>
-            </h1>
-            <p className="text-gray-500 text-xs mt-1">Boroz Arcade OS v1.0.4</p>
-          </div>
-          <div className="text-right">
-            <p className="text-xs font-bold text-gray-500 uppercase">Estado</p>
-            <p className="text-green-400 text-sm animate-pulse">● En Línea</p>
-          </div>
-        </header>
+  const xpForNextLevel = 100;
+  const currentXp = profile?.xp || 0;
+  const xpProgress = (currentXp % xpForNextLevel) / xpForNextLevel * 100;
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Tarjeta de Perfil */}
-          <div className="md:col-span-1 bg-white/5 border border-white/10 p-6 rounded-2xl backdrop-blur-sm shadow-xl">
-            <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mb-4 mx-auto flex items-center justify-center text-4xl font-black shadow-lg shadow-blue-500/20">
+  return (
+    <div className="min-h-screen bg-background">
+      {showUsernameSetup && <UsernameSetup userId={user.id} />}
+      
+      {/* Header */}
+      <header className="flex items-center justify-between px-6 py-4 border-b border-border">
+        <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+            <span className="text-primary-foreground font-bold text-sm">B</span>
+          </div>
+          <span className="font-semibold text-foreground">Boroz Arcade</span>
+        </Link>
+        
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 bg-accent rounded-full" />
+            <span className="text-sm text-foreground-muted">Online</span>
+          </div>
+          <form action="/auth/signout" method="post">
+            <button 
+              type="submit"
+              className="px-4 py-2 text-sm text-foreground-muted hover:text-foreground transition-colors"
+            >
+              Cerrar sesion
+            </button>
+          </form>
+        </div>
+      </header>
+
+      <div className="max-w-4xl mx-auto px-6 py-8">
+        {/* Profile Card */}
+        <div className="bg-surface border border-border rounded-2xl p-6 mb-6">
+          <div className="flex items-start gap-4">
+            <div className="w-16 h-16 bg-primary rounded-xl flex items-center justify-center text-2xl font-bold text-primary-foreground shrink-0">
               {profile?.username?.[0]?.toUpperCase() || "?"}
             </div>
-            <h2 className="text-xl font-bold text-center mb-1">
-              {profile?.username || "Sin Nombre"}
-            </h2>
-            <p className="text-gray-500 text-xs text-center mb-6">{user.email}</p>
-            
-            <div className="space-y-4">
-               <div>
-                  <div className="flex justify-between text-xs font-bold mb-1 uppercase text-gray-400">
-                    <span>Nivel {profile?.level || 1}</span>
-                    <span>{profile?.xp || 0} XP</span>
-                  </div>
-                  <div className="w-full bg-white/10 h-2 rounded-full overflow-hidden">
-                    <div 
-                      className="bg-blue-500 h-full transition-all duration-1000" 
-                      style={{ width: `${Math.min((profile?.xp || 0) % 100, 100)}%` }}
-                    />
-                  </div>
-               </div>
-            </div>
-          </div>
-
-          {/* Estadísticas / Acciones */}
-          <div className="md:col-span-2 space-y-6">
-            <div className="bg-white/5 border border-white/10 p-8 rounded-2xl">
-              <h3 className="text-lg font-black uppercase mb-4 tracking-tight">Misiones Disponibles</h3>
-              <div className="space-y-4 text-sm text-gray-400 italic">
-                <p>No hay misiones activas. ¡Elige un juego en el Lobby para empezar!</p>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-xl font-bold text-foreground truncate">
+                {profile?.username || "Sin nombre"}
+              </h1>
+              <p className="text-sm text-foreground-muted truncate">{user.email}</p>
+              
+              {/* Level Progress */}
+              <div className="mt-4 space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-foreground-muted">Nivel {profile?.level || 1}</span>
+                  <span className="text-foreground-muted">{currentXp} XP</span>
+                </div>
+                <div className="h-2 bg-border rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-primary rounded-full transition-all duration-500"
+                    style={{ width: `${xpProgress}%` }}
+                  />
+                </div>
               </div>
             </div>
+          </div>
+        </div>
 
-            <div className="flex gap-4">
-              <a 
-                href="/lobby"
-                className="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-xl transition-all shadow-lg shadow-blue-600/20 active:scale-95 text-center"
-              >
-                ENTRAR AL LOBBY
-              </a>
-              <form action="/auth/signout" method="post" className="flex-none">
-                <button 
-                  type="submit"
-                  className="px-6 py-4 border border-white/10 hover:bg-red-500/10 hover:text-red-400 text-gray-500 rounded-xl transition-all"
-                >
-                  Cerrar Sesión
-                </button>
-              </form>
-            </div>
+        {/* Stats Grid */}
+        <div className="grid grid-cols-3 gap-4 mb-6">
+          <div className="bg-surface border border-border rounded-xl p-4 text-center">
+            <p className="text-2xl font-bold text-foreground">{profile?.level || 1}</p>
+            <p className="text-sm text-foreground-muted">Nivel</p>
+          </div>
+          <div className="bg-surface border border-border rounded-xl p-4 text-center">
+            <p className="text-2xl font-bold text-foreground">{currentXp}</p>
+            <p className="text-sm text-foreground-muted">XP Total</p>
+          </div>
+          <div className="bg-surface border border-border rounded-xl p-4 text-center">
+            <p className="text-2xl font-bold text-foreground">0</p>
+            <p className="text-sm text-foreground-muted">Partidas</p>
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="space-y-3">
+          <Link 
+            href="/lobby"
+            className="flex items-center justify-center gap-2 w-full py-4 bg-primary text-primary-foreground font-semibold rounded-xl hover:opacity-90 transition-opacity"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="5 3 19 12 5 21 5 3" />
+            </svg>
+            Jugar ahora
+          </Link>
+          
+          <div className="bg-surface border border-border rounded-xl p-4">
+            <h3 className="font-medium text-foreground mb-2">Proximos pasos</h3>
+            <p className="text-sm text-foreground-muted">
+              Entra al lobby para buscar una partida o unirte a una sala existente.
+            </p>
           </div>
         </div>
       </div>

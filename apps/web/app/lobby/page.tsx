@@ -3,12 +3,12 @@
 import React, { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Database } from "@/types/database.types";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
 export default function LobbyPage() {
-  const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [onlinePlayers, setOnlinePlayers] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -24,7 +24,6 @@ export default function LobbyPage() {
         router.push("/login");
         return;
       }
-      setUser(user);
 
       const { data: profileData } = await supabase
         .from("profiles")
@@ -33,13 +32,13 @@ export default function LobbyPage() {
         .single();
       
       if (!profileData?.username) {
-        router.push("/dashboard"); // Obligar a tener username
+        router.push("/dashboard");
         return;
       }
       setProfile(profileData);
       setLoading(false);
 
-      // --- CONFIGURACIÓN DE SUPABASE REALTIME PRESENCE ---
+      // Supabase Realtime Presence
       const channel = supabase.channel("lobby-players", {
         config: {
           presence: {
@@ -61,7 +60,6 @@ export default function LobbyPage() {
               username: profileData.username,
               level: profileData.level,
               status: "idle",
-              online_at: new Error().stack, // Just a timestamp trick
             });
           }
         });
@@ -74,12 +72,15 @@ export default function LobbyPage() {
     initLobby();
   }, [supabase, router]);
 
-  const toggleSearch = async () => {
-    if (!user) return;
+  const handleSearch = async () => {
+    if (isSearching) {
+      setIsSearching(false);
+      return;
+    }
+
     setIsSearching(true);
 
     try {
-      // RF-005: Buscar sala disponible (status='waiting' y < 4 jugadores)
       const { data: existingRooms, error: searchError } = await supabase
         .from("rooms")
         .select("*")
@@ -91,7 +92,6 @@ export default function LobbyPage() {
 
       if (existingRooms && existingRooms.length > 0) {
         const room = existingRooms[0];
-        // Unirse a sala existente
         await supabase
           .from("rooms")
           .update({ current_players: room.current_players + 1 })
@@ -99,11 +99,10 @@ export default function LobbyPage() {
         
         router.push(`/game/${room.id}`);
       } else {
-        // Crear nueva sala
         const { data: newRoom, error: createError } = await supabase
           .from("rooms")
           .insert({
-            name: `Sector-${Math.floor(Math.random() * 1000)}`,
+            name: `Room-${Math.floor(Math.random() * 1000)}`,
             status: "waiting",
             current_players: 1,
             max_players: 4
@@ -117,111 +116,145 @@ export default function LobbyPage() {
     } catch (err) {
       console.error("Matchmaking error:", err);
       setIsSearching(false);
-      alert("Error al buscar partida. Inténtalo de nuevo.");
     }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-blue-500 font-black text-2xl animate-pulse uppercase tracking-tighter">
-          Cargando Lobby...
-        </div>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-foreground-muted">Cargando...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white p-4 md:p-8 font-sans">
-      <div className="max-w-6xl mx-auto">
-        <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 border-b border-white/5 pb-8">
-          <div>
-            <h1 className="text-4xl font-black uppercase italic tracking-tighter">
-              Global <span className="text-blue-500">Lobby</span>
-            </h1>
-            <p className="text-gray-500 text-xs mt-1 uppercase tracking-widest">
-              Jugadores en línea: {onlinePlayers.length}
-            </p>
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="flex items-center justify-between px-6 py-4 border-b border-border">
+        <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+            <span className="text-primary-foreground font-bold text-sm">B</span>
           </div>
-          
-          <div className="flex items-center gap-4 bg-white/5 p-2 rounded-2xl border border-white/10">
-            <div className="text-right px-4 border-r border-white/10">
-               <p className="text-[10px] font-bold text-gray-500 uppercase">Tu Rango</p>
-               <p className="text-sm font-black text-blue-400 uppercase">Novato Lvl {profile?.level}</p>
+          <span className="font-semibold text-foreground">Boroz Arcade</span>
+        </Link>
+        
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-surface border border-border rounded-lg">
+            <span className="w-2 h-2 bg-accent rounded-full" />
+            <span className="text-sm text-foreground-muted">{onlinePlayers.length} online</span>
+          </div>
+          <Link 
+            href="/dashboard"
+            className="flex items-center gap-2 px-3 py-1.5 bg-surface border border-border rounded-lg hover:bg-surface-elevated transition-colors"
+          >
+            <div className="w-6 h-6 bg-primary rounded flex items-center justify-center text-xs font-bold text-primary-foreground">
+              {profile?.username?.[0]?.toUpperCase()}
             </div>
-            <button 
-              onClick={() => router.push("/dashboard")}
-              className="px-4 py-2 hover:bg-white/5 rounded-xl transition-all text-xs font-bold uppercase text-gray-400"
-            >
-              Perfil
-            </button>
-          </div>
-        </header>
+            <span className="text-sm text-foreground">{profile?.username}</span>
+          </Link>
+        </div>
+      </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Lista de Jugadores */}
-          <div className="lg:col-span-2 space-y-4">
-            <h2 className="text-xs font-black text-gray-500 uppercase tracking-widest ml-1 mb-4">
-              Jugadores en el Servidor
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {onlinePlayers.map((player: any, idx) => (
-                <div 
-                  key={idx}
-                  className="bg-white/5 border border-white/10 p-4 rounded-xl flex items-center justify-between group hover:bg-blue-500/5 hover:border-blue-500/20 transition-all"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500/20 to-purple-600/20 rounded-lg flex items-center justify-center font-bold text-blue-400 border border-blue-500/20">
-                      {player.username?.[0]?.toUpperCase()}
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold">{player.username}</p>
-                      <p className="text-[10px] text-gray-500 uppercase font-black tracking-tighter">
-                        Lvl {player.level} • {player.status || 'En el lobby'}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="w-2 h-2 bg-green-500 rounded-full shadow-[0_0_10px_rgba(34,197,94,0.5)]" />
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Menú de Acción */}
-          <div className="lg:col-span-1">
-            <div className="bg-gradient-to-b from-blue-600/10 to-transparent border border-blue-500/20 p-8 rounded-3xl sticky top-8">
-              <h3 className="text-xl font-black uppercase mb-2 tracking-tighter">Buscador de Combate</h3>
-              <p className="text-gray-400 text-xs mb-8 uppercase leading-relaxed tracking-widest">
-                El sistema te emparejará con un piloto de nivel similar.
+      <div className="max-w-5xl mx-auto px-6 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Main Action */}
+          <div className="lg:col-span-2">
+            <div className="bg-surface border border-border rounded-2xl p-6 mb-6">
+              <h1 className="text-2xl font-bold text-foreground mb-2">Buscar partida</h1>
+              <p className="text-foreground-muted mb-6">
+                El matchmaking te emparejara con jugadores de nivel similar.
               </p>
-
+              
               <button 
-                onClick={toggleSearch}
-                className={`w-full py-6 rounded-2xl font-black text-lg transition-all duration-300 transform active:scale-95 flex flex-col items-center justify-center gap-1 ${
+                onClick={handleSearch}
+                className={`w-full py-4 font-semibold rounded-xl transition-all ${
                   isSearching 
-                  ? 'bg-red-500 text-white shadow-lg shadow-red-500/20' 
-                  : 'bg-white text-black hover:bg-blue-500 hover:text-white shadow-xl shadow-blue-500/10'
+                    ? 'bg-destructive text-white' 
+                    : 'bg-primary text-primary-foreground hover:opacity-90'
                 }`}
               >
                 {isSearching ? (
-                  <>
-                    <span>CANCELAR BÚSQUEDA</span>
-                    <span className="text-[10px] animate-pulse">BUSCANDO OPONENTE...</span>
-                  </>
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Buscando partida... Clic para cancelar
+                  </span>
                 ) : (
-                  <span>BUSCAR PARTIDA</span>
+                  'Buscar partida'
                 )}
               </button>
+            </div>
 
-              <div className="mt-8 space-y-4 pt-8 border-t border-white/5">
-                 <div className="flex justify-between text-[10px] font-black uppercase text-gray-500">
-                    <span>Ping del Servidor</span>
-                    <span className="text-green-400">24ms</span>
-                 </div>
-                 <div className="flex justify-between text-[10px] font-black uppercase text-gray-500">
-                    <span>Región</span>
-                    <span className="text-white">Latam-East</span>
-                 </div>
+            {/* Players Online */}
+            <div className="bg-surface border border-border rounded-2xl p-6">
+              <h2 className="font-semibold text-foreground mb-4">Jugadores en el lobby</h2>
+              
+              {onlinePlayers.length === 0 ? (
+                <p className="text-foreground-muted text-sm py-4 text-center">
+                  No hay otros jugadores en el lobby
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {onlinePlayers.map((player: any, idx) => (
+                    <div 
+                      key={idx}
+                      className="flex items-center justify-between p-3 bg-background rounded-xl"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center font-semibold text-primary">
+                          {player.username?.[0]?.toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="font-medium text-foreground">{player.username}</p>
+                          <p className="text-xs text-foreground-muted">Nivel {player.level || 1}</p>
+                        </div>
+                      </div>
+                      <span className="w-2 h-2 bg-accent rounded-full" />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Sidebar */}
+          <div className="space-y-4">
+            <div className="bg-surface border border-border rounded-2xl p-6">
+              <h3 className="font-semibold text-foreground mb-4">Tu perfil</h3>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-foreground-muted">Nivel</span>
+                  <span className="text-sm font-medium text-foreground">{profile?.level || 1}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-foreground-muted">XP</span>
+                  <span className="text-sm font-medium text-foreground">{profile?.xp || 0}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-surface border border-border rounded-2xl p-6">
+              <h3 className="font-semibold text-foreground mb-4">Servidor</h3>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-foreground-muted">Region</span>
+                  <span className="text-sm font-medium text-foreground">Auto</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-foreground-muted">Estado</span>
+                  <span className="text-sm font-medium text-accent">Online</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-surface border border-border rounded-2xl p-6">
+              <h3 className="font-semibold text-foreground mb-2">Controles</h3>
+              <div className="space-y-2 text-sm text-foreground-muted">
+                <p><kbd className="px-2 py-1 bg-background rounded text-xs font-mono">WASD</kbd> Movimiento</p>
+                <p><kbd className="px-2 py-1 bg-background rounded text-xs font-mono">SPACE</kbd> Disparar</p>
+                <p><kbd className="px-2 py-1 bg-background rounded text-xs font-mono">ESC</kbd> Salir</p>
               </div>
             </div>
           </div>
