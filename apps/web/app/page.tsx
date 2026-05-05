@@ -24,6 +24,7 @@ export default function Home() {
 
   useEffect(() => {
     const getUser = async () => {
+      if (!supabase) return;
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
     };
@@ -60,18 +61,26 @@ export default function Home() {
         
         <div className="flex flex-col md:flex-row items-center justify-center gap-4 mt-8">
           {user ? (
-            <div className="bg-white/5 backdrop-blur-md p-6 rounded-2xl border border-white/10">
-              <p className="text-gray-400 mb-2">Bienvenido, Guerrero</p>
-              <p className="text-white font-bold">{user.email}</p>
-              <button 
-                onClick={async () => {
-                  await supabase.auth.signOut();
-                  router.refresh();
-                }}
-                className="mt-4 px-6 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500 hover:text-white transition-all"
-              >
-                Cerrar Sesión
-              </button>
+            <div className="bg-white/5 backdrop-blur-md p-8 rounded-2xl border border-white/10 flex flex-col items-center">
+              <p className="text-gray-400 text-xs uppercase tracking-widest mb-2">Piloto Identificado</p>
+              <p className="text-white font-black text-xl mb-6">{user.email}</p>
+              <div className="flex gap-4">
+                <button 
+                  onClick={() => router.push("/dashboard")}
+                  className="px-8 py-3 bg-blue-600 text-white font-black rounded-xl hover:bg-blue-500 transition-all shadow-lg shadow-blue-600/20"
+                >
+                  IR AL DASHBOARD
+                </button>
+                <button 
+                  onClick={async () => {
+                    await supabase.auth.signOut();
+                    router.refresh();
+                  }}
+                  className="px-6 py-3 border border-white/10 text-gray-500 rounded-xl hover:bg-red-500/10 hover:text-red-400 transition-all"
+                >
+                  SALIR
+                </button>
+              </div>
             </div>
           ) : (
             <>
