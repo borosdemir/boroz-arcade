@@ -1,115 +1,128 @@
 "use client";
 
-import React, { Suspense, useEffect, useState } from "react";
-import { Canvas } from "@react-three/fiber";
-import { OrbitControls, Stars, Float } from "@react-three/drei";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 
-function RotatingCube() {
-  return (
-    <Float speed={2} rotationIntensity={1} floatIntensity={2}>
-      <mesh rotation={[45, 45, 0]}>
-        <boxGeometry args={[2, 2, 2]} />
-        <meshStandardMaterial color="#3b82f6" emissive="#1d4ed8" emissiveIntensity={0.5} wireframe />
-      </mesh>
-    </Float>
-  );
-}
-
 export default function Home() {
   const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const supabase = createClient();
   const router = useRouter();
 
   useEffect(() => {
     const getUser = async () => {
-      if (!supabase) return;
+      if (!supabase) {
+        setLoading(false);
+        return;
+      }
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
+      setLoading(false);
     };
     getUser();
   }, [supabase]);
 
-  const handleLogin = async () => {
-    router.push("/login");
+  const handleEnter = () => {
+    if (user) {
+      router.push("/dashboard");
+    } else {
+      router.push("/login");
+    }
   };
 
   return (
-    <main className="relative w-full h-screen bg-black overflow-hidden flex items-center justify-center">
-      {/* 3D Background */}
-      <div className="absolute inset-0 z-0">
-        <Canvas camera={{ position: [0, 0, 5], fov: 75 }}>
-          <ambientLight intensity={0.5} />
-          <pointLight position={[10, 10, 10]} intensity={1} />
-          <Suspense fallback={null}>
-            <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
-            <RotatingCube />
-            <OrbitControls enableZoom={false} autoRotate autoRotateSpeed={0.5} />
-          </Suspense>
-        </Canvas>
-      </div>
-
-      {/* Overlay Content */}
-      <div className="relative z-10 text-center space-y-8 p-4">
-        <h1 className="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 drop-shadow-2xl animate-pulse">
-          BOROZ ARCADE
-        </h1>
-        <p className="text-xl md:text-2xl text-gray-400 font-light tracking-widest uppercase">
-          The Future of Web Multiplayer (2026)
-        </p>
+    <main className="min-h-screen bg-background flex flex-col">
+      {/* Header */}
+      <header className="flex items-center justify-between px-6 py-4 border-b border-border">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+            <span className="text-primary-foreground font-bold text-sm">B</span>
+          </div>
+          <span className="font-semibold text-foreground">Boroz Arcade</span>
+        </div>
         
-        <div className="flex flex-col md:flex-row items-center justify-center gap-4 mt-8">
-          {user ? (
-            <div className="bg-white/5 backdrop-blur-md p-8 rounded-2xl border border-white/10 flex flex-col items-center">
-              <p className="text-gray-400 text-xs uppercase tracking-widest mb-2">Piloto Identificado</p>
-              <p className="text-white font-black text-xl mb-6">{user.email}</p>
-              <div className="flex gap-4">
+        {!loading && (
+          <div className="flex items-center gap-3">
+            {user ? (
+              <>
+                <span className="text-sm text-foreground-muted">{user.email}</span>
                 <button 
                   onClick={() => router.push("/dashboard")}
-                  className="px-8 py-3 bg-blue-600 text-white font-black rounded-xl hover:bg-blue-500 transition-all shadow-lg shadow-blue-600/20"
+                  className="px-4 py-2 bg-surface text-foreground text-sm font-medium rounded-lg border border-border hover:bg-surface-elevated transition-colors"
                 >
-                  IR AL DASHBOARD
+                  Dashboard
                 </button>
-                <button 
-                  onClick={async () => {
-                    await supabase.auth.signOut();
-                    router.refresh();
-                  }}
-                  className="px-6 py-3 border border-white/10 text-gray-500 rounded-xl hover:bg-red-500/10 hover:text-red-400 transition-all"
-                >
-                  SALIR
-                </button>
-              </div>
-            </div>
-          ) : (
-            <>
+              </>
+            ) : (
               <button 
-                onClick={handleLogin}
-                className="px-8 py-4 bg-white text-black font-bold rounded-full hover:bg-blue-500 hover:text-white transition-all duration-300 transform hover:scale-110 shadow-lg shadow-blue-500/20"
+                onClick={() => router.push("/login")}
+                className="px-4 py-2 bg-surface text-foreground text-sm font-medium rounded-lg border border-border hover:bg-surface-elevated transition-colors"
               >
-                ENTRAR AL JUEGO
+                Iniciar sesion
               </button>
-              <button className="px-8 py-4 border border-white/20 text-white font-bold rounded-full hover:bg-white/10 transition-all duration-300">
-                VER LEADERBOARD
-              </button>
-            </>
-          )}
-        </div>
-        
-        <div className="pt-12 flex items-center justify-center gap-8">
-           <div className="text-xs text-gray-500">
-             <p className="font-bold text-gray-300 uppercase">Supabase Auth</p>
-             <p className={user ? "text-green-400" : "text-yellow-400"}>
-               {user ? "Conectado" : "Esperando credenciales..."}
-             </p>
-           </div>
-           <div className="text-xs text-gray-500">
-             <p className="font-bold text-gray-300 uppercase">Real-time Engine</p>
-             <p className="text-blue-400 italic">Próximamente (Nakama)</p>
-           </div>
+            )}
+          </div>
+        )}
+      </header>
+
+      {/* Hero */}
+      <div className="flex-1 flex flex-col items-center justify-center px-6 py-20">
+        <div className="max-w-2xl mx-auto text-center space-y-8">
+          <div className="space-y-4">
+            <h1 className="text-5xl md:text-7xl font-bold text-foreground tracking-tight text-balance">
+              Juega. Compite. Diviertete.
+            </h1>
+            <p className="text-lg md:text-xl text-foreground-muted max-w-md mx-auto text-pretty">
+              Tu arcade online. Partidas rapidas, multijugador en tiempo real, sin complicaciones.
+            </p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <button 
+              onClick={handleEnter}
+              className="w-full sm:w-auto px-8 py-4 bg-primary text-primary-foreground font-semibold rounded-xl hover:opacity-90 transition-opacity"
+            >
+              {user ? "Ir al Dashboard" : "Empezar a jugar"}
+            </button>
+            <button 
+              onClick={() => router.push("/lobby")}
+              className="w-full sm:w-auto px-8 py-4 bg-surface text-foreground font-semibold rounded-xl border border-border hover:bg-surface-elevated transition-colors"
+            >
+              Ver partidas
+            </button>
+          </div>
+
+          {/* Stats */}
+          <div className="flex items-center justify-center gap-8 pt-8">
+            <div className="text-center">
+              <p className="text-2xl font-bold text-foreground">1v1</p>
+              <p className="text-sm text-foreground-muted">Batallas</p>
+            </div>
+            <div className="w-px h-8 bg-border" />
+            <div className="text-center">
+              <p className="text-2xl font-bold text-foreground">60fps</p>
+              <p className="text-sm text-foreground-muted">Suave</p>
+            </div>
+            <div className="w-px h-8 bg-border" />
+            <div className="text-center">
+              <p className="text-2xl font-bold text-foreground">Real-time</p>
+              <p className="text-sm text-foreground-muted">Sync</p>
+            </div>
+          </div>
         </div>
       </div>
+
+      {/* Footer */}
+      <footer className="px-6 py-4 border-t border-border">
+        <div className="flex items-center justify-between text-sm text-foreground-muted">
+          <span>Boroz Arcade 2026</span>
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 bg-accent rounded-full" />
+            <span>Servidores online</span>
+          </div>
+        </div>
+      </footer>
     </main>
   );
 }
