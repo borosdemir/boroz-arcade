@@ -1,159 +1,89 @@
-# Turborepo starter
+# 🕹️ Boroz Arcade — Real-Time Multiplayer Platform
 
-This Turborepo starter is maintained by the Turborepo core team.
+Plataforma de juegos multijugador en tiempo real construida con un enfoque de ingeniería de alto rendimiento y escalabilidad. Diseñada para ofrecer una experiencia arcade fluida directamente en el navegador.
 
-## Using this example
+---
 
-Run the following command:
+## 🛠️ Stack Tecnológico
 
-```sh
-npx create-turbo@latest
+- **Framework:** Next.js 16 (App Router) + TypeScript.
+- **Estilos:** Tailwind CSS v4 (Nativo, alto rendimiento).
+- **Backend:** Supabase (Auth, Realtime Presence, Broadcast, PostgreSQL).
+- **Arquitectura:** Monorepo con Turborepo para gestión de paquetes.
+- **Testing:** Jest (Unitario) + Cypress (E2E) con enfoque Test-Driven (TDD).
+
+---
+
+## 🚀 Características Implementadas
+
+### 1. Gestión de Identidad y Sesión
+- **Auth Seguro:** Integración completa con Supabase Auth.
+- **Middleware de Protección:** Rutas privadas protegidas a nivel de servidor.
+- **Perfil de Jugador:** Sistema de "Username obligatorio" con triggers en base de datos para la creación automática de perfiles.
+
+### 2. Global Lobby (Real-Time)
+- **Presence:** Visualización en tiempo real de jugadores conectados.
+- **Matchmaking Real:** Sistema basado en salas (`rooms`) que empareja jugadores y crea instancias de juego dinámicas.
+
+### 3. Space Shooter (Combat Arena)
+- **Motor de Juego Puro:** Lógica de física y colisiones escrita en TypeScript plano, 100% testeable sin dependencias de UI.
+- **Sync de Baja Latencia:** Uso de Supabase Broadcast para sincronizar posiciones y disparos a 60 FPS.
+- **Client-Side Prediction:** Los disparos son instantáneos en el cliente local para eliminar la sensación de lag.
+- **Metajuego:** Persistencia de XP y puntuaciones en el historial de partidas.
+
+---
+
+## ⚙️ Ingeniería de Código
+
+### Enfoque de Calidad (Test-First)
+El proyecto cuenta con una suite de **27 tests** que validan el núcleo del simulador de combate antes de renderizar un solo píxel.
+
+```bash
+# Ejecutar tests unitarios (Motor de física, colisiones, lógica)
+npm run test
+
+# Ejecutar tests E2E (Flujos de usuario, matchmaking, arena)
+npm run cypress:run
 ```
 
-## What's inside?
+### Arquitectura Realtime
+Implementamos una arquitectura de eventos distribuida:
+- **Presence:** Para el estado "Online" de los jugadores.
+- **Broadcast:** Para el estado efímero del combate (Posiciones, Láseres).
+- **DB Changes:** Para el estado persistente (Niveles, Leaderboards).
 
-This Turborepo includes the following packages/apps:
+---
 
-### Apps and Packages
+## 🛠️ Instalación y Uso
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+1. **Clonar y dependencias:**
+   ```bash
+   git clone https://github.com/tu-usuario/boroz-arcade.git
+   npm install
+   ```
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+2. **Variables de Entorno:**
+   Configura tu `.env.local` con las credenciales de Supabase:
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=tu_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=tu_key
+   ```
 
-### Utilities
+3. **Ejecutar en desarrollo:**
+   ```bash
+   npm run dev
+   ```
 
-This Turborepo has some additional tools already setup for you:
+---
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
+## 🗺️ Roadmap
 
-### Build
+- [x] Fase 1: Identidad y Cimientos.
+- [x] Fase 2: Lobby y Presencia Realtime.
+- [x] Fase 3: Space Shooter (Arena de combate).
+- [ ] Fase 4: Leaderboard Global y Sistema de Logros.
+- [ ] Fase 5: Optimización de red (WebWorkers).
 
-To build all apps and packages, run the following command:
+---
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo build
-```
-
-Without global `turbo`, use your package manager:
-
-```sh
-cd my-turborepo
-npx turbo build
-npm dlx turbo build
-npm exec turbo build
-```
-
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo build --filter=docs
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo build --filter=docs
-npm exec turbo build --filter=docs
-npm exec turbo build --filter=docs
-```
-
-### Develop
-
-To develop all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo dev
-```
-
-Without global `turbo`, use your package manager:
-
-```sh
-cd my-turborepo
-npx turbo dev
-npm exec turbo dev
-npm exec turbo dev
-```
-
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo dev --filter=web
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo dev --filter=web
-npm exec turbo dev --filter=web
-npm exec turbo dev --filter=web
-```
-
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo login
-```
-
-Without global `turbo`, use your package manager:
-
-```sh
-cd my-turborepo
-npx turbo login
-npm exec turbo login
-npm exec turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo link
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo link
-npm exec turbo link
-npm exec turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
+**Desarrollado con ❤️ para la comunidad arcade por Daniel Cárdenas.**
